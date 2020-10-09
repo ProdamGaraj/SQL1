@@ -79,7 +79,7 @@ namespace SQL1
 
                 int id = Int32.Parse(Console.ReadLine());
                 while (GetVillainName(id) == null) { Console.WriteLine("No villain with ID " + id + "exists in the database"); id = Int32.Parse(Console.ReadLine()); };
-                string selectionCommandString = 
+                string selectionCommandString =
                     $" SELECT Name, Age FROM Minions m " +
                     $"JOIN MinionsVillains v ON m.Id = v.MinionId" +
                     $" WHERE v.VillainsId = " + id;
@@ -105,6 +105,10 @@ namespace SQL1
                 }
                 connection.Close();
             }
+
+
+
+            static void Task4
         }
     }
 }
