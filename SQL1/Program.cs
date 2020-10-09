@@ -16,7 +16,7 @@ namespace SQL1
                 string selectionCommandString =
                     $"SELECT v.Name , COUNT(MinionId) " +
                     $"FROM MinionsVillains m " +
-                    $"RIGHT JOIN Villains v ON m.VillainsId = v.id " +
+                    $"RIGHT JOIN Villains v ON m.VillainsId = v.Id " +
                     $"GROUP BY m.VillainsId,v.Name " +
                     $"HAVING COUNT(MinionId) > 2 " +
                     $"ORDER BY COUNT(MinionId) DESC ";
@@ -46,9 +46,7 @@ namespace SQL1
                 static object GetVillainName(int id)
                 {
                     string selectionCommandString =
-                        $"DECLARE @name nvarchar(50)" +
-                        $"SET @name = (SELECT Name FROM Villains v WHERE v.id = '" + id + "')" +
-                        " SELECT @name";
+                        $"SELECT Name FROM Villains v WHERE v.Id = " + id;
                     SqlConnection connection = new SqlConnection(connectionString);
                     connection.Open();
                     SqlCommand command = new SqlCommand(selectionCommandString, connection);
@@ -67,9 +65,9 @@ namespace SQL1
                 static bool VillainHaveMinions(int id)
                 {
                     string selectionCommandString =
-                        $"SELECT VillainsId" +
-                        $" FROM MinionsVillains m" +
-                        $" WHERE m.VillainsId=" + id;
+                        $"SELECT VillainsId " +
+                        $"FROM MinionsVillains m " +
+                        $"WHERE m.VillainsId=" + id;
                     SqlConnection connection = new SqlConnection(connectionString);
                     connection.Open();
                     SqlCommand command = new SqlCommand(selectionCommandString, connection);
@@ -80,9 +78,9 @@ namespace SQL1
                 int id = Int32.Parse(Console.ReadLine());
                 while (GetVillainName(id) == null) { Console.WriteLine("No villain with ID " + id + "exists in the database"); id = Int32.Parse(Console.ReadLine()); };
                 string selectionCommandString =
-                    $" SELECT Name, Age FROM Minions m " +
-                    $"JOIN MinionsVillains v ON m.Id = v.MinionId" +
-                    $" WHERE v.VillainsId = " + id;
+                    $"SELECT Name, Age FROM Minions m " +
+                    $"JOIN MinionsVillains v ON m.Id = v.MinionId " +
+                    $"WHERE v.VillainsId = " + id;
                 SqlConnection connection = new SqlConnection(connectionString);
                 connection.Open();
                 SqlCommand command = new SqlCommand(selectionCommandString, connection);
@@ -108,7 +106,7 @@ namespace SQL1
 
 
 
-            static void Task4
+
         }
     }
 }
