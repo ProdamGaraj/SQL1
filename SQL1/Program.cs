@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.Collections.Generic;
 
 namespace SQL1
 {
@@ -42,65 +43,6 @@ namespace SQL1
             }
         }
 
-        static void SelectTask2()
-        {
-            string selectionCommandString =
-                $"SELECT v.Name , COUNT(MinionId) " +
-                $"FROM MinionsVillains m " +
-                $"RIGHT JOIN Villains v ON m.VillainsId = v.Id " +
-                $"GROUP BY m.VillainsId,v.Name " +
-                $"HAVING COUNT(MinionId) > 2 " +
-                $"ORDER BY COUNT(MinionId) DESC ";
-            SqlConnection connection = new SqlConnection(connectionString);
-            connection.Open();
-            SqlCommand command = new SqlCommand(selectionCommandString, connection);
-            using (connection)
-            {
-                SqlDataReader reader = command.ExecuteReader();
-                using (reader)
-                {
-                    while (reader.Read())
-                    {
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            Console.Write($"{reader[i]} ");
-                        }
-                        Console.WriteLine();
-                    }
-                }
-            }
-        }
-
-        static void SelectTask3()
-        {
-            int id = Int32.Parse(Console.ReadLine());
-            while (GetVillainName(id) == null) { Console.WriteLine("No villain with ID " + id + " exists in the database"); id = Int32.Parse(Console.ReadLine()); };
-            Console.WriteLine(GetVillainName(id));
-            if (!IsVillainHasMinions(id))
-            {
-                Console.WriteLine("(no minions)");
-                return;
-            }
-            string selectionCommandString =
-                $"SELECT Name, Age FROM Minions m " +
-                $"JOIN MinionsVillains v ON m.Id = v.MinionId " +
-                $"WHERE v.VillainsId = " + id;
-            SqlConnection connection = new SqlConnection(connectionString);
-            connection.Open();
-            SqlCommand command = new SqlCommand(selectionCommandString, connection);
-            using (connection)
-            {
-                SqlDataReader reader = command.ExecuteReader();
-                using (reader)
-                {
-                    int j = 1;
-                    while (reader.Read())
-                    {
-                        Console.WriteLine(j++ + ". " + $"{reader["Name"]} {reader["Age"]}");
-                    }
-                }
-            }
-        }
         static int GetTownId(string name)
         {
             string selectionCommandString =
@@ -206,7 +148,107 @@ namespace SQL1
             }
         }
 
-        static void SelectTask4()
+        static int DeleteVillain(int id)
+        {
+            string sql = $"DELETE FROM Villains WHERE id=" + id;
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (connection)
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(sql, connection);
+                return command.ExecuteNonQuery();
+            }
+
+        }
+
+        static int FreeMinions(int id)
+        {
+            string sql =
+                $"DELETE FROM MinionsVillains " +
+                $"WHERE VillainsId=" + id;
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (connection)
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(sql, connection);
+                return command.ExecuteNonQuery();
+            }
+        }
+
+        static int IncrementMinionsAge(List<int> idList)
+        {
+            string sql =
+                $"UPDATE Minions " +
+                $"SET Age = Age + 1" +
+                $"WHERE Id IN ({string.Join(", ", idList)})";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(sql, connection);
+                return command.ExecuteNonQuery();
+            }
+        }
+        static void Task2()
+        {
+            string selectionCommandString =
+                $"SELECT v.Name , COUNT(MinionId) " +
+                $"FROM MinionsVillains m " +
+                $"RIGHT JOIN Villains v ON m.VillainsId = v.Id " +
+                $"GROUP BY m.VillainsId,v.Name " +
+                $"HAVING COUNT(MinionId) > 2 " +
+                $"ORDER BY COUNT(MinionId) DESC ";
+            SqlConnection connection = new SqlConnection(connectionString);
+            connection.Open();
+            SqlCommand command = new SqlCommand(selectionCommandString, connection);
+            using (connection)
+            {
+                SqlDataReader reader = command.ExecuteReader();
+                using (reader)
+                {
+                    while (reader.Read())
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            Console.Write($"{reader[i]} ");
+                        }
+                        Console.WriteLine();
+                    }
+                }
+            }
+        }
+
+        static void Task3()
+        {
+            int id = Int32.Parse(Console.ReadLine());
+            while (GetVillainName(id) == null) { Console.WriteLine("No villain with ID " + id + " exists in the database"); id = Int32.Parse(Console.ReadLine()); };
+            Console.WriteLine(GetVillainName(id));
+            if (!IsVillainHasMinions(id))
+            {
+                Console.WriteLine("(no minions)");
+                return;
+            }
+            string selectionCommandString =
+                $"SELECT Name, Age FROM Minions m " +
+                $"JOIN MinionsVillains v ON m.Id = v.MinionId " +
+                $"WHERE v.VillainsId = " + id;
+            SqlConnection connection = new SqlConnection(connectionString);
+            connection.Open();
+            SqlCommand command = new SqlCommand(selectionCommandString, connection);
+            using (connection)
+            {
+                SqlDataReader reader = command.ExecuteReader();
+                using (reader)
+                {
+                    int i = 1;
+                    while (reader.Read())
+                    {
+                        Console.WriteLine(i++ + ". " + $"{reader["Name"]} {reader["Age"]}");
+                    }
+                }
+            }
+        }
+
+        static void Task4()
         {
             string[] minion = new string[3];
             minion = Console.ReadLine().Split(' ');
@@ -228,11 +270,48 @@ namespace SQL1
 
         }
 
+        static void Task5()
+        {
+            int villainId = Int32.Parse(Console.ReadLine());
+            string villainName = GetVillainName(villainId);
+            while (villainName == null) { Console.WriteLine("Такой злодей не найден"); }
+            var freedMibionsCount = FreeMinions(villainId);
+            DeleteVillain(villainId);
+            Console.WriteLine(villainName + " был удалён\n" + freedMibionsCount + " миньонов было освобождено");
+        }
+
+        static void Task6()
+        {
+            string[] idStrMass = Console.ReadLine().Split(' ');
+            List<int> idList = new List<int>();
+            foreach (string i in idStrMass) { idList.Add(Int32.Parse(i)); }
+            IncrementMinionsAge(idList);
+            string sql =
+                $"SELECT Minions.Name n, Minions.Age a " +
+                $"FROM Minions ";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand(sql, connection);
+                SqlDataReader reader = command.ExecuteReader();
+                using (reader)
+                {
+                    while (reader.Read())
+                    {
+                        Console.WriteLine($"{reader["n"]}, {reader["a"]} ");
+                    }
+                }
+            }
+
+        }
+
         static void Main(string[] args)
         {
-            //SelectTask2();
-            //SelectTask3();
-            //SelectTask4();
+            //Task2();
+            //Task3();
+            //Task4();
+            Task5();
+            //Task6();
         }
     }
 }
